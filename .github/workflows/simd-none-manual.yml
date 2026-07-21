@@ -1,0 +1,34 @@
+name: SIMD NONE manual test
+
+on:
+  push:
+    branches:
+      - ci-test-simd-none
+
+permissions:
+  contents: read
+
+jobs:
+  simd-none:
+    name: AMD64 Debian SIMD Level NONE (manual)
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - name: Checkout Arrow
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3
+      - name: Setup Archery
+        run: python3 -m pip install -e dev/archery[docker]
+      - name: Execute Docker Build (SIMD_LEVEL=NONE, baseline pinned to x86-64-v1)
+        run: |
+          echo "DEBIAN=13" >> .env
+          archery docker run \
+            -e ARROW_SIMD_LEVEL=NONE \
+            -e CXXFLAGS=-march=x86-64 \
+            debian-cpp
